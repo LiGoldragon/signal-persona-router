@@ -6,7 +6,7 @@
 
 use nota_codec::{NotaEnum, NotaRecord, NotaTransparent};
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
-use signal_core::{SemaVerb, signal_channel};
+use signal_core::signal_channel;
 use signal_persona_auth::{ChannelId, EngineId};
 use signal_persona_message::MessageSlot;
 
@@ -113,9 +113,9 @@ pub enum RouterObservationUnimplementedReason {
 
 signal_channel! {
     request RouterRequest {
-        Summary(RouterSummaryQuery),
-        MessageTrace(RouterMessageTraceQuery),
-        ChannelState(RouterChannelStateQuery),
+        Match Summary(RouterSummaryQuery),
+        Match MessageTrace(RouterMessageTraceQuery),
+        Match ChannelState(RouterChannelStateQuery),
     }
 
     reply RouterReply {
@@ -123,13 +123,5 @@ signal_channel! {
         MessageTrace(RouterMessageTrace),
         ChannelState(RouterChannelState),
         Unimplemented(RouterObservationUnimplemented),
-    }
-}
-
-impl RouterRequest {
-    pub const fn signal_verb(&self) -> SemaVerb {
-        match self {
-            Self::Summary(_) | Self::MessageTrace(_) | Self::ChannelState(_) => SemaVerb::Match,
-        }
     }
 }

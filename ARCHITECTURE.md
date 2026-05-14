@@ -21,7 +21,9 @@ The former asks and wraps; the latter owns message ingress.
 - Router channel state queries and replies.
 
 Current request variants are read-shaped observation queries. They all declare
-`RouterRequest::signal_verb() -> signal_core::SemaVerb` and map to `Match`:
+their root verb in the `signal_channel!` declaration, which generates
+`RouterRequest::signal_verb()` and `RouterRequest::into_signal_request()`.
+All current variants map to `Match`:
 
 ```text
 Summary      -> Match
@@ -29,10 +31,9 @@ MessageTrace -> Match
 ChannelState -> Match
 ```
 
-The spelling remains `SemaVerb` until the coordinated `signal-core`
-`SignalVerb` rename lands. No router observation request may be wrapped as
-`Assert`; write-shaped router state changes belong in a separate request
-variant with its own root-verb witness.
+No router observation request may be wrapped as `Assert`; write-shaped router
+state changes belong in a separate request variant with its own root-verb
+witness.
 
 ## 2. Constraints
 
@@ -40,7 +41,7 @@ variant with its own root-verb witness.
 |---|---|
 | Router observations have a router-owned contract home. | This crate exists; central introspection contract does not define router rows. |
 | Every request/reply travels as a Signal frame. | `tests/round_trip.rs` length-prefixed frame tests. |
-| Router observation queries use the `Match` root. | `RouterRequest::signal_verb()` plus round-trip tests assert `SemaVerb::Match`. |
+| Router observation queries use the `Match` root. | `RouterRequest::signal_verb()` plus round-trip tests assert `SignalVerb::Match`. |
 | Message ingress remains in `signal-persona-message`. | This crate imports `MessageSlot` but does not redefine message submission records. |
 | Runtime code stays out of the contract. | Source scan: no Kameo, Tokio, socket, or redb code. |
 

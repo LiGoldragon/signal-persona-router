@@ -1,4 +1,4 @@
-use signal_core::{FrameBody, Request, SemaVerb};
+use signal_core::{FrameBody, Request, SignalVerb};
 use signal_persona_auth::{ChannelId, EngineId};
 use signal_persona_message::MessageSlot;
 use signal_persona_router::{
@@ -12,15 +12,15 @@ fn router_summary_query_round_trips_through_length_prefixed_frame() {
     let request = RouterRequest::Summary(RouterSummaryQuery {
         engine: EngineId::new("prototype"),
     });
-    let frame = Frame::new(FrameBody::Request(Request::match_records(request.clone())));
+    let frame = Frame::new(FrameBody::Request(request.clone().into_signal_request()));
 
     let bytes = frame.encode_length_prefixed().expect("encode");
     let decoded = Frame::decode_length_prefixed(&bytes).expect("decode");
 
     match decoded.into_body() {
         FrameBody::Request(Request::Operation { verb, payload }) => {
-            assert_eq!(verb, SemaVerb::Match);
-            assert_eq!(request.signal_verb(), SemaVerb::Match);
+            assert_eq!(verb, SignalVerb::Match);
+            assert_eq!(request.signal_verb(), SignalVerb::Match);
             assert_eq!(payload, request);
         }
         other => panic!("expected Match request, got {other:?}"),
@@ -32,15 +32,15 @@ fn router_message_trace_query_round_trips_through_length_prefixed_frame() {
         engine: EngineId::new("prototype"),
         message_slot: MessageSlot::new(7),
     });
-    let frame = Frame::new(FrameBody::Request(Request::match_records(request.clone())));
+    let frame = Frame::new(FrameBody::Request(request.clone().into_signal_request()));
 
     let bytes = frame.encode_length_prefixed().expect("encode");
     let decoded = Frame::decode_length_prefixed(&bytes).expect("decode");
 
     match decoded.into_body() {
         FrameBody::Request(Request::Operation { verb, payload }) => {
-            assert_eq!(verb, SemaVerb::Match);
-            assert_eq!(request.signal_verb(), SemaVerb::Match);
+            assert_eq!(verb, SignalVerb::Match);
+            assert_eq!(request.signal_verb(), SignalVerb::Match);
             assert_eq!(payload, request);
         }
         other => panic!("expected Match request, got {other:?}"),
@@ -53,15 +53,15 @@ fn router_channel_state_query_round_trips_through_length_prefixed_frame() {
         engine: EngineId::new("prototype"),
         channel: ChannelId::new("internal-message-router"),
     });
-    let frame = Frame::new(FrameBody::Request(Request::match_records(request.clone())));
+    let frame = Frame::new(FrameBody::Request(request.clone().into_signal_request()));
 
     let bytes = frame.encode_length_prefixed().expect("encode");
     let decoded = Frame::decode_length_prefixed(&bytes).expect("decode");
 
     match decoded.into_body() {
         FrameBody::Request(Request::Operation { verb, payload }) => {
-            assert_eq!(verb, SemaVerb::Match);
-            assert_eq!(request.signal_verb(), SemaVerb::Match);
+            assert_eq!(verb, SignalVerb::Match);
+            assert_eq!(request.signal_verb(), SignalVerb::Match);
             assert_eq!(payload, request);
         }
         other => panic!("expected Match request, got {other:?}"),
@@ -85,7 +85,7 @@ fn router_request_variants_declare_match_as_signal_root_verb() {
     ];
 
     for request in requests {
-        assert_eq!(request.signal_verb(), SemaVerb::Match);
+        assert_eq!(request.signal_verb(), SignalVerb::Match);
     }
 }
 
