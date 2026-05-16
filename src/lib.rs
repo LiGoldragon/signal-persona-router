@@ -60,11 +60,27 @@ pub struct RouterSummary {
     pub failed_messages: u64,
 }
 
+/// Observation of a known message slot. The slot was found in the router's
+/// store; `status` is the closed-enum delivery state derived from its trace.
+/// When the slot itself is not in the store, the reply is
+/// `RouterReply::MessageTraceMissing(RouterMessageTraceMissing)` — *not* this
+/// record with a placeholder status. The closed-enum rule applies: a
+/// `Unknown` variant would conflate "slot not observed" with "slot observed,
+/// state unrepresentable," which are two different facts.
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
 pub struct RouterMessageTrace {
     pub engine: EngineId,
     pub message_slot: MessageSlot,
     pub status: RouterDeliveryStatus,
+}
+
+/// Slot lookup failed: the message slot is not present in the router's
+/// store. Distinct from `RouterMessageTrace` so callers pattern-match on
+/// presence vs absence without inspecting a sentinel status variant.
+#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+pub struct RouterMessageTraceMissing {
+    pub engine: EngineId,
+    pub message_slot: MessageSlot,
 }
 
 #[derive(
@@ -76,7 +92,6 @@ pub enum RouterDeliveryStatus {
     Delivered,
     Deferred,
     Failed,
-    Unknown,
 }
 
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
@@ -93,7 +108,6 @@ pub enum RouterChannelStatus {
     Installed,
     Missing,
     Disabled,
-    Unknown,
 }
 
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
@@ -122,6 +136,7 @@ signal_channel! {
         reply RouterReply {
             Summary(RouterSummary),
             MessageTrace(RouterMessageTrace),
+            MessageTraceMissing(RouterMessageTraceMissing),
             ChannelState(RouterChannelState),
             Unimplemented(RouterObservationUnimplemented),
         }

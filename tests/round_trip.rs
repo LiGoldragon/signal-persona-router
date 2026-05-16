@@ -7,7 +7,8 @@ use signal_persona_message::MessageSlot;
 use signal_persona_router::{
     RouterChannelState, RouterChannelStateQuery, RouterChannelStatus, RouterDeliveryStatus,
     RouterFrame as Frame, RouterFrameBody as FrameBody, RouterMessageTrace,
-    RouterMessageTraceQuery, RouterReply, RouterRequest, RouterSummary, RouterSummaryQuery,
+    RouterMessageTraceMissing, RouterMessageTraceQuery, RouterReply, RouterRequest, RouterSummary,
+    RouterSummaryQuery,
 };
 
 fn exchange() -> ExchangeIdentifier {
@@ -143,4 +144,50 @@ fn router_channel_state_reply_round_trips_through_length_prefixed_frame() {
         status: RouterChannelStatus::Installed,
     });
     assert_eq!(round_trip_reply(reply.clone()), reply);
+}
+
+#[test]
+fn router_message_trace_missing_reply_round_trips_through_length_prefixed_frame() {
+    let reply = RouterReply::MessageTraceMissing(RouterMessageTraceMissing {
+        engine: EngineId::new("prototype"),
+        message_slot: MessageSlot::new(99),
+    });
+    assert_eq!(round_trip_reply(reply.clone()), reply);
+}
+
+#[test]
+fn router_status_enums_are_closed_no_unknown_variants() {
+    // Witness for the closed-enum integrity rule: callers may exhaustively
+    // match every `RouterDeliveryStatus` and `RouterChannelStatus` variant.
+    // Adding an `Unknown` (or any forward-compat placeholder) would smuggle
+    // a polling-shape escape hatch back into the wire enum; this match must
+    // continue to enumerate only positively-named, store-derivable states.
+    for status in [
+        RouterDeliveryStatus::Accepted,
+        RouterDeliveryStatus::Routed,
+        RouterDeliveryStatus::Delivered,
+        RouterDeliveryStatus::Deferred,
+        RouterDeliveryStatus::Failed,
+    ] {
+        let observed = match status {
+            RouterDeliveryStatus::Accepted => "accepted",
+            RouterDeliveryStatus::Routed => "routed",
+            RouterDeliveryStatus::Delivered => "delivered",
+            RouterDeliveryStatus::Deferred => "deferred",
+            RouterDeliveryStatus::Failed => "failed",
+        };
+        assert!(!observed.is_empty());
+    }
+    for status in [
+        RouterChannelStatus::Installed,
+        RouterChannelStatus::Missing,
+        RouterChannelStatus::Disabled,
+    ] {
+        let observed = match status {
+            RouterChannelStatus::Installed => "installed",
+            RouterChannelStatus::Missing => "missing",
+            RouterChannelStatus::Disabled => "disabled",
+        };
+        assert!(!observed.is_empty());
+    }
 }
