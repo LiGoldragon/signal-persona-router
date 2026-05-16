@@ -1,0 +1,39 @@
+;; Canonical NOTA examples for signal-persona-router.
+;;
+;; One example per request variant followed by one example per reply
+;; variant. The text-form head is the payload's record-head, not the
+;; RouterRequest / RouterReply variant name — see ARCHITECTURE.md §6
+;; "NOTA codec quirk on signal_channel! payload heads."
+;;
+;; Round-trip witness: tests/canonical_examples.rs parses each record
+;; through `<RouterRequest as NotaDecode>::decode` /
+;; `<RouterReply as NotaDecode>::decode`, re-encodes it, and asserts
+;; the canonical text equals what is written here.
+
+;; ─── Requests ─────────────────────────────────────────────────────
+
+;; RouterRequest::Summary
+(RouterSummaryQuery prototype)
+
+;; RouterRequest::MessageTrace
+(RouterMessageTraceQuery prototype 7)
+
+;; RouterRequest::ChannelState
+(RouterChannelStateQuery prototype internal-message-router)
+
+;; ─── Replies ──────────────────────────────────────────────────────
+
+;; RouterReply::Summary
+(RouterSummary prototype 1 1 0 0)
+
+;; RouterReply::MessageTrace — slot present, status closed
+(RouterMessageTrace prototype 7 Routed)
+
+;; RouterReply::MessageTraceMissing — slot not in store
+(RouterMessageTraceMissing prototype 99)
+
+;; RouterReply::ChannelState
+(RouterChannelState prototype internal-message-router Installed)
+
+;; RouterReply::Unimplemented
+(RouterObservationUnimplemented Summary NotInPrototypeScope)
